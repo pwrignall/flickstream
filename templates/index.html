@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlickStream</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #60a5fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cache-info {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: normal;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .cache-refresh {
+            padding: 6px 12px;
+            background: #334155;
+            border: none;
+            border-radius: 4px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .cache-refresh:hover {
+            background: #475569;
+        }
+        
+        .cache-refresh:active {
+            background: #1e293b;
+        }
+        
+        .filters {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .streaming-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .service-tag {
+            padding: 6px 12px;
+            background: #334155;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        
+        .service-tag.preferred {
+            background: #7c3aed;
+            color: white;
+            border: 2px solid #a78bfa;
+        }
+        
+        .service-tag.preferred:hover {
+            background: #6d28d9;
+        }
+        
+        .service-tag:hover {
+            background: #475569;
+        }
+        
+        .service-tag.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .service-tag.preferred.active {
+            background: #10b981;
+            border-color: #34d399;
+        }
+        
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .movie-card {
+            background: #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .movie-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            background: #334155;
+        }
+        
+        .movie-info {
+            padding: 12px;
+        }
+        
+        .movie-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .movie-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        
+        .movie-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .genre-badge {
+            padding: 2px 8px;
+            background: #334155;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .movie-providers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .provider-badge {
+            padding: 3px 8px;
+            background: #10b981;
+            border-radius: 3px;
+            font-size: 10px;
+            color: white;
+        }
+        
+        .rating {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #fbbf24;
+            color: #0f172a;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #94a3b8;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #94a3b8;
+        }
+        
+        .stats {
+            margin-bottom: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🎬 FlickStream
+            <div class="cache-info">
+                <span id="cache-stats">Cache: 0 items</span>
+                <button class="cache-refresh" onclick="refreshCache()">Refresh Cache</button>
+            </div>
+        </h1>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label>Streaming Services</label>
+                <div class="streaming-services" id="streaming-services">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="search" placeholder="Search movies...">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Genre</label>
+                    <select id="genre-filter">
+                        <option value="">All Genres</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Release Year</label>
+                    <input type="number" id="year-filter" placeholder="e.g., 2024">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select id="sort-by">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="release_date_desc">Release Date (Newest)</option>
+                        <option value="release_date_asc">Release Date (Oldest)</option>
+                        <option value="rating_desc">Rating (Highest)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats"></div>
+        
+        <div id="loading" class="loading">Loading watchlist...</div>
+        <div id="no-results" class="no-results" style="display: none;">No movies match your filters</div>
+        <div class="movies-grid" id="movies-grid"></div>
+    </div>
+    
+    <script>
+        let allMovies = [];
+        let allGenres = [];
+        let selectedServices = new Set(JSON.parse(localStorage.getItem('selectedServices') || '[]'));
+        let userRegion = 'US'; // Will be updated from API
+        let providersLoaded = false;
+        let loadingProviders = false;
+        let streamingServices = []; // Will be loaded from API
+        let preferredServices = []; // Configured services from MY_STREAMING_SERVICES (from API)
+        let isConfiguredServices = false; // Whether services are from config or auto-discovered
+        
+        async function loadData() {
+            try {
+                console.log('Starting to load data...');
+                const [moviesRes, genresRes, servicesRes] = await Promise.all([
+                    fetch('/api/watchlist'),
+                    fetch('/api/genres'),
+                    fetch('/api/streaming-services')
+                ]);
+                
+                console.log('Movies response status:', moviesRes.status);
+                console.log('Genres response status:', genresRes.status);
+                console.log('Services response status:', servicesRes.status);
+                
+                if (!moviesRes.ok) {
+                    throw new Error(`Movies API returned ${moviesRes.status}`);
+                }
+                if (!genresRes.ok) {
+                    throw new Error(`Genres API returned ${genresRes.status}`);
+                }
+                
+                allMovies = await moviesRes.json();
+                allGenres = await genresRes.json();
+                
+                // Load streaming services configuration
+                if (servicesRes.ok) {
+                    const servicesData = await servicesRes.json();
+                    streamingServices = servicesData.services;
+                    userRegion = servicesData.region;
+                    isConfiguredServices = servicesData.source === 'configured';
+                    
+                    // Get preferred services from the API response
+                    preferredServices = servicesData.preferred || [];
+                    
+                    console.log(`Loaded ${streamingServices.length} streaming services for region ${userRegion} (${servicesData.source})`);
+                    if (preferredServices.length > 0) {
+                        console.log(`Preferred services: ${preferredServices.join(', ')}`);
+                    }
+                }
+                
+                console.log('Loaded movies:', allMovies.length);
+                console.log('Loaded genres:', allGenres.length);
+                
+                populateGenres();
+                renderStreamingServices();
+                renderMovies();
+                document.getElementById('loading').style.display = 'none';
+                
+                if (allMovies.length === 0) {
+                    document.getElementById('loading').innerHTML = 
+                        'No movies in watchlist. <a href="/api/debug" target="_blank" style="color: #60a5fa;">Check debug info</a>';
+                    document.getElementById('loading').style.display = 'block';
+                } else {
+                    // Load providers in the background
+                    loadProviders();
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = 
+                    `Error loading watchlist: ${error.message}<br>
+                    <a href="/api/debug" target="_blank" style="color: #60a5fa;">View debug information</a><br>
+                    <small style="color: #94a3b8;">Check browser console (F12) for more details</small>`;
+            }
+        }
+        
+        async function loadProviders() {
+            if (loadingProviders || providersLoaded) return;
+            loadingProviders = true;
+            
+            console.log('Loading providers and runtime in background...');
+            const stats = document.getElementById('stats');
+            const originalStats = stats.textContent;
+            stats.innerHTML = originalStats + ' <span style="color: #94a3b8;">⏳ Loading streaming info...</span>';
+            
+            try {
+                // Load providers and runtime in batches to avoid overwhelming the server
+                const batchSize = 20;
+                for (let i = 0; i < allMovies.length; i += batchSize) {
+                    const batch = allMovies.slice(i, i + batchSize);
+                    const ids = batch.map(m => m.id).join(',');
+                    
+                    // Fetch both providers and runtime in parallel
+                    const [providersResponse, detailsResponse] = await Promise.all([
+                        fetch(`/api/providers?ids=${ids}`),
+                        fetch(`/api/movie-details?ids=${ids}`)
+                    ]);
+                    
+                    if (providersResponse.ok) {
+                        const providersData = await providersResponse.json();
+                        
+                        // Update movies with provider information
+                        batch.forEach(movie => {
+                            if (providersData[movie.id]) {
+                                movie.providers = providersData[movie.id];
+                            }
+                        });
+                    }
+                    
+                    if (detailsResponse.ok) {
+                        const detailsData = await detailsResponse.json();
+                        
+                        // Update movies with runtime information
+                        batch.forEach(movie => {
+                            if (detailsData[movie.id]) {
+                                movie.runtime = detailsData[movie.id].runtime;
+                            }
+                        });
+                    }
+                    
+                    // Re-render to show updated info
+                    renderMovies();
+                    
+                    // If this is the first batch and we don't have streaming services yet, reload them
+                    if (i === 0 && streamingServices.length === 0) {
+                        const servicesRes = await fetch('/api/streaming-services');
+                        if (servicesRes.ok) {
+                            const servicesData = await servicesRes.json();
+                            streamingServices = servicesData.services;
+                            renderStreamingServices();
+                        }
+                    }
+                    
+                    // Small delay between batches to be nice to the server
+                    if (i + batchSize < allMovies.length) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                providersLoaded = true;
+                stats.textContent = originalStats;
+                console.log('All providers and runtime loaded!');
+                
+                // Reload streaming services one final time after all providers are loaded
+                const servicesRes = await fetch('/api/streaming-services');
+                if (servicesRes.ok) {
+                    const servicesData = await servicesRes.json();
+                    if (servicesData.services.length > streamingServices.length) {
+                        streamingServices = servicesData.services;
+                        renderStreamingServices();
+                        console.log('Updated streaming services list after full provider load');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading providers:', error);
+                stats.textContent = originalStats;
+            } finally {
+                loadingProviders = false;
+            }
+        }
+        
+        function populateGenres() {
+            const genreFilter = document.getElementById('genre-filter');
+            allGenres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.textContent = genre.name;
+                genreFilter.appendChild(option);
+            });
+        }
+        
+        function renderStreamingServices() {
+            const container = document.getElementById('streaming-services');
+            container.innerHTML = '';
+            
+            // Sort services: preferred first, then alphabetically
+            const sortedServices = [...streamingServices].sort((a, b) => {
+                const aIsPreferred = preferredServices.includes(a);
+                const bIsPreferred = preferredServices.includes(b);
+                
+                // Preferred services come first
+                if (aIsPreferred && !bIsPreferred) return -1;
+                if (!aIsPreferred && bIsPreferred) return 1;
+                
+                // Otherwise sort alphabetically
+                return a.localeCompare(b);
+            });
+            
+            sortedServices.forEach(service => {
+                const isPreferred = preferredServices.includes(service);
+                const tag = document.createElement('div');
+                tag.className = 'service-tag' + 
+                    (selectedServices.has(service) ? ' active' : '') + 
+                    (isPreferred ? ' preferred' : '');
+                tag.textContent = service;
+                tag.onclick = () => toggleService(service);
+                container.appendChild(tag);
+            });
+        }
+        
+        function toggleService(service) {
+            if (selectedServices.has(service)) {
+                selectedServices.delete(service);
+            } else {
+                selectedServices.add(service);
+            }
+            localStorage.setItem('selectedServices', JSON.stringify([...selectedServices]));
+            renderStreamingServices();
+            renderMovies();
+        }
+        
+        function getMovieProviders(movie) {
+            const providers = movie.providers[userRegion];
+            if (!providers || !providers.flatrate) return [];
+            return providers.flatrate.map(p => p.provider_name);
+        }
+        
+        function filterMovies() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const genreFilter = document.getElementById('genre-filter').value;
+            const yearFilter = document.getElementById('year-filter').value;
+            
+            let filtered = allMovies.filter(movie => {
+                // Search filter
+                if (search && !movie.title.toLowerCase().includes(search)) {
+                    return false;
+                }
+                
+                // Genre filter
+                if (genreFilter && !movie.genre_ids.includes(parseInt(genreFilter))) {
+                    return false;
+                }
+                
+                // Year filter
+                if (yearFilter && !movie.release_date.startsWith(yearFilter)) {
+                    return false;
+                }
+                
+                // Streaming service filter
+                if (selectedServices.size > 0) {
+                    const movieProviders = getMovieProviders(movie);
+                    const hasService = movieProviders.some(p => selectedServices.has(p));
+                    if (!hasService) return false;
+                }
+                
+                return true;
+            });
+            
+            // Sort
+            const sortBy = document.getElementById('sort-by').value;
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'release_date_desc':
+                        return (b.release_date || '').localeCompare(a.release_date || '');
+                    case 'release_date_asc':
+                        return (a.release_date || '').localeCompare(b.release_date || '');
+                    case 'rating_desc':
+                        return (b.vote_average || 0) - (a.vote_average || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            return filtered;
+        }
+        
+        function renderMovies() {
+            const grid = document.getElementById('movies-grid');
+            const noResults = document.getElementById('no-results');
+            const stats = document.getElementById('stats');
+            
+            const filtered = filterMovies();
+            
+            if (filtered.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                stats.textContent = '';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            noResults.style.display = 'none';
+            
+            const statsText = `Showing ${filtered.length} of ${allMovies.length} movies`;
+            if (!loadingProviders && !providersLoaded) {
+                stats.textContent = statsText;
+            } else if (!stats.textContent.includes('⏳')) {
+                stats.textContent = statsText;
+            }
+            
+            grid.innerHTML = filtered.map(movie => {
+                const posterUrl = movie.poster_path 
+                    ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+                    : '';
+                const year = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
+                const providers = getMovieProviders(movie);
+                const runtime = movie.runtime ? `${movie.runtime} min` : 'N/A';
+                
+                return `
+                    <div class="movie-card">
+                        ${posterUrl ? `<img class="movie-poster" src="${posterUrl}" alt="${movie.title}">` : '<div class="movie-poster"></div>'}
+                        <div class="movie-info">
+                            <div class="movie-title">${movie.title}</div>
+                            <div class="movie-meta">
+                                ${year} ${movie.vote_average ? `<span class="rating">★ ${movie.vote_average.toFixed(1)}</span>` : ''} | ${runtime}
+                            </div>
+                            <div class="movie-genres">
+                                ${movie.genres.slice(0, 2).map(g => `<span class="genre-badge">${g}</span>`).join('')}
+                            </div>
+                            ${providers.length > 0 ? `
+                                <div class="movie-providers">
+                                    ${providers.map(p => `<span class="provider-badge">${p}</span>`).join('')}
+                                </div>
+                            ` : (!providersLoaded && loadingProviders ? '<div style="color: #64748b; font-size: 10px; margin-top: 5px;">⏳ Loading...</div>' : '')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function refreshCache() {
+            if (confirm('Clear cache and reload fresh data from TMDb? This will refetch all 629 movies.')) {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.textContent = 'Clearing...';
+                
+                fetch('/api/cache/clear')
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Cache cleared:', data);
+                        // Reload the page to fetch fresh data
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error clearing cache:', error);
+                        btn.disabled = false;
+                        btn.textContent = 'Refresh Cache';
+                        alert('Error clearing cache. Check console for details.');
+                    });
+            }
+        }
+        
+        async function loadCacheStats() {
+            try {
+                const response = await fetch('/api/cache/stats');
+                if (response.ok) {
+                    const stats = await response.json();
+                    const cacheStatsEl = document.getElementById('cache-stats');
+                    
+                    const providerCount = stats.providers.cached_entries || 0;
+                    const watchlistCached = stats.watchlist.cached_entries > 0;
+                    
+                    if (watchlistCached) {
+                        const cacheTime = new Date(stats.watchlist.latest_cache);
+                        const hoursAgo = Math.floor((Date.now() - cacheTime) / 1000 / 60 / 60);
+                        const timeText = hoursAgo === 0 ? 'just now' : 
+                                       hoursAgo === 1 ? '1 hour ago' : 
+                                       `${hoursAgo} hours ago`;
+                        
+                        cacheStatsEl.innerHTML = `
+                            💾 Cache: ${providerCount} providers cached | 
+                            Last updated ${timeText}
+                        `;
+                    } else {
+                        cacheStatsEl.textContent = '💾 Cache: No cached data';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading cache stats:', error);
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('search').addEventListener('input', renderMovies);
+        document.getElementById('genre-filter').addEventListener('change', renderMovies);
+        document.getElementById('year-filter').addEventListener('input', renderMovies);
+        document.getElementById('sort-by').addEventListener('change', renderMovies);
+        
+        // Load data on page load
+        loadData();
+        loadCacheStats();
+    </script>
+</body>
+</html>
