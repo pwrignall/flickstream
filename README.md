@@ -38,6 +38,16 @@ Edit `.env` and add your credentials:
 ```
 TMDB_API_KEY=your_actual_api_key_here
 TMDB_ACCOUNT_ID=your_actual_account_id_here
+
+# Optional: Configure your streaming services (comma-separated)
+MY_STREAMING_SERVICES=Netflix,Amazon Prime Video,Disney Plus
+
+# Optional: Your region for streaming providers (default: US)
+USER_REGION=GB
+
+# Optional: Cache expiration times in hours
+WATCHLIST_CACHE_HOURS=6
+PROVIDERS_CACHE_HOURS=24
 ```
 
 ### 3. Run with Docker Compose
@@ -57,30 +67,41 @@ When you first open the app, click on the streaming services you're subscribed t
 To run without Docker for development:
 
 ```bash
+# Install uv (if not already installed)
+# On macOS and Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# On Windows, see: https://docs.astral.sh/uv/getting-started/installation/
+
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Set environment variables
 export TMDB_API_KEY=your_key
 export TMDB_ACCOUNT_ID=your_id
 
 # Run the app
-python app.py
+uv run python app.py
 ```
 
 ## Configuration
 
 ### Change Your Region
 
-The app defaults to US streaming providers. To change this, edit `templates/index.html` and modify this line:
+The app defaults to US streaming providers. To change this, set the `USER_REGION` variable in your `.env` file:
 
-```javascript
-const userRegion = 'US'; // Change to 'GB', 'CA', 'AU', etc.
+```
+USER_REGION=GB  # Change to 'CA', 'AU', 'DE', 'FR', etc.
 ```
 
-### Add More Streaming Services
+### Pre-configure Your Streaming Services
 
-Edit the `streamingServices` array in `templates/index.html` to add or remove services.
+You can optionally pre-configure your streaming services in the `.env` file instead of selecting them in the UI:
+
+```
+MY_STREAMING_SERVICES=Netflix,Amazon Prime Video,Disney Plus,Hulu
+```
+
+If not set, you can still select your services through the web interface.
 
 ## Troubleshooting
 
@@ -90,7 +111,7 @@ Edit the `streamingServices` array in `templates/index.html` to add or remove se
 - Check the container logs: `docker-compose logs -f`
 
 ### Providers not showing
-- Ensure the `userRegion` matches your location
+- Ensure the `USER_REGION` environment variable in your `.env` file matches your location
 - Not all movies have streaming provider data for all regions
 
 ### Port already in use
@@ -101,6 +122,7 @@ Edit the `streamingServices` array in `templates/index.html` to add or remove se
 - **Backend**: Flask (Python web framework)
 - **Frontend**: Vanilla JavaScript with modern CSS
 - **API**: TMDb API v3
+- **Dependency Management**: uv (fast Python package installer)
 - **Deployment**: Docker + Gunicorn
 
 ## License
