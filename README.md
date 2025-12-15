@@ -68,7 +68,9 @@ To run without Docker for development:
 
 ```bash
 # Install uv (if not already installed)
+# On macOS and Linux:
 curl -LsSf https://astral.sh/uv/install.sh | sh
+# On Windows, see: https://docs.astral.sh/uv/getting-started/installation/
 
 # Install dependencies
 uv sync
@@ -109,7 +111,7 @@ If not set, you can still select your services through the web interface.
 - Check the container logs: `docker-compose logs -f`
 
 ### Providers not showing
-- Ensure the `USER_REGION` environment variable matches your location
+- Ensure the `USER_REGION` environment variable in your `.env` file matches your location
 - Not all movies have streaming provider data for all regions
 
 ### Port already in use
