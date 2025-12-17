@@ -125,7 +125,7 @@ The test database includes:
 
 To reinitialize or reset the test database at any time:
 ```bash
-python3 init_dev_db.py
+uv run python init_dev_db.py
 ```
 
 **Note**: To fetch fresh data or add more movies, you'll need to set your real TMDb credentials.

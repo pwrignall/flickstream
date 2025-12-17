@@ -14,7 +14,7 @@ fi
 # Check if dev.db exists
 if [ ! -f "dev.db" ]; then
     echo "📦 dev.db not found. Initializing test database..."
-    python3 init_dev_db.py
+    uv run python init_dev_db.py
     echo ""
 fi
 

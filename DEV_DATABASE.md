@@ -81,7 +81,7 @@ sqlite3 dev.db "SELECT movie_id, runtime FROM movie_details_cache;"
 Edit `init_dev_db.py` and add more movies to the `test_movies`, `providers_data`, and `runtime_data` dictionaries, then run:
 
 ```bash
-python3 init_dev_db.py
+uv run python init_dev_db.py
 ```
 
 ## Production vs Development

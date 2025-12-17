@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlickStream</title>
-    <link rel="icon" type="image/x-icon" href="../static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <style>
         * {
             margin: 0;
@@ -278,9 +278,10 @@
         }
         
         .streaming-content.expanded {
-            max-height: 500px;
-        }
-        
+            max-height: fit-content;
+            transition: max-height 0.5s ease-in;
+        }       
+
         .streaming-content-inner {
             padding: 0 20px 20px 20px;
         }
