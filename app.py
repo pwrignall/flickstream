@@ -30,7 +30,7 @@ MY_STREAMING_SERVICES = os.environ.get('MY_STREAMING_SERVICES', '')
 USER_REGION = os.environ.get('USER_REGION', 'US')
 
 # Database setup
-DB_PATH = '/app/flickstream_cache.db'
+DB_PATH = os.environ.get('DB_PATH', '/app/flickstream_cache.db')
 
 def init_db():
     """Initialize the SQLite database for caching"""
