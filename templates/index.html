@@ -608,7 +608,7 @@
         }
         
         function refreshCache() {
-            if (confirm('Clear cache and reload fresh data from TMDb? This will refetch all 629 movies.')) {
+            if (confirm(`Clear cache and reload fresh data from TMDb? This will refetch all ${allMovies.length} movies.`)) {
                 const btn = event.target;
                 btn.disabled = true;
                 btn.textContent = 'Clearing...';
@@ -647,7 +647,7 @@
                                        `${hoursAgo} hours ago`;
                         
                         cacheStatsEl.innerHTML = `
-                            💾 Cache: ${providerCount} providers cached | 
+                            💾 Cache: Metadata cached for ${providerCount} movie${providerCount === 1 ? '' : 's'} | 
                             Last updated ${timeText}
                         `;
                     } else {
