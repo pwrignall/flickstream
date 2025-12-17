@@ -588,6 +588,11 @@ def api_streaming_services():
             if 'flatrate' in region_data:
                 for provider in region_data['flatrate']:
                     services_set.add(provider['provider_name'])
+            
+            # Get free providers
+            if 'free' in region_data:
+                for provider in region_data['free']:
+                    services_set.add(provider['provider_name'])
         
         discovered_services = sorted(list(services_set))
         
