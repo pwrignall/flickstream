@@ -115,7 +115,7 @@ def init_dev_db():
         278: {"US": {"flatrate": [{"provider_name": "Netflix"}, {"provider_name": "Amazon Prime Video"}]}},
         238: {"US": {"flatrate": [{"provider_name": "Paramount Plus"}]}},
         240: {"US": {"flatrate": [{"provider_name": "Paramount Plus"}]}},
-        424: {"US": {"flatrate": [{"provider_name": "Netflix"}]}},
+        424: {"US": {"free": [{"provider_name": "BBC iPlayer"}]}},
         389: {"US": {"flatrate": [{"provider_name": "Amazon Prime Video"}]}}
     }
 

@@ -589,8 +589,15 @@
         
         function getMovieProviders(movie) {
             const providers = movie.providers[userRegion];
-            if (!providers || !providers.flatrate) return [];
-            return providers.flatrate.map(p => p.provider_name);
+            if (!providers) return [];
+            let movieProviders = [];
+            if (providers.flatrate) {
+                movieProviders = movieProviders.concat(providers.flatrate.map(p => p.provider_name));
+            }
+            if (providers.free) {
+                movieProviders = movieProviders.concat(providers.free.map(p => p.provider_name));
+            }
+            return movieProviders;
         }
         
         function filterMovies() {
