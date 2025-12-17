@@ -1,6 +1,6 @@
 # FlickStream - TMDb Watchlist Viewer
 
-A simple Python web application to view and filter your TMDb watchlist with streaming service availability.
+A simple Python web application to view and filter your TMDb watchlist with streaming service availability. Availability is provided by [JustWatch](https://www.justwatch.com/).
 
 ## Features
 
