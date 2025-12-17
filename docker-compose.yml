@@ -17,4 +17,10 @@ services:
       - USER_REGION=${USER_REGION:-US}
       - WATCHLIST_CACHE_HOURS=${WATCHLIST_CACHE_HOURS:-6}
       - PROVIDERS_CACHE_HOURS=${PROVIDERS_CACHE_HOURS:-24}
+      - DB_PATH=/app/data/flickstream_cache.db
+    volumes:
+      - flickstream-data:/app/data
     restart: unless-stopped
+
+volumes:
+  flickstream-data:
