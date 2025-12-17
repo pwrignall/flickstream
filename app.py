@@ -30,7 +30,7 @@ MY_STREAMING_SERVICES = os.environ.get('MY_STREAMING_SERVICES', '')
 USER_REGION = os.environ.get('USER_REGION', 'US')
 
 # Database setup
-DB_PATH = '/app/flickstream_cache.db'
+DB_PATH = os.environ.get('DB_PATH', '/app/flickstream_cache.db')
 
 def init_db():
     """Initialize the SQLite database for caching"""
@@ -587,6 +587,11 @@ def api_streaming_services():
             # Get flatrate (subscription) providers
             if 'flatrate' in region_data:
                 for provider in region_data['flatrate']:
+                    services_set.add(provider['provider_name'])
+            
+            # Get free providers
+            if 'free' in region_data:
+                for provider in region_data['free']:
                     services_set.add(provider['provider_name'])
         
         discovered_services = sorted(list(services_set))

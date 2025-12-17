@@ -12,6 +12,23 @@ A simple Python web application to view and filter your TMDb watchlist with stre
 - 🎨 Clean, dark-themed interface
 - 🐳 Easy Docker deployment
 
+## Quick Start (Local Development)
+
+Want to try it out without setting up TMDb credentials? Use the included test database:
+
+```bash
+# Option 1: Use the helper script
+./dev-server.sh
+
+# Option 2: Manual setup
+uv sync
+export DB_PATH=./dev.db
+export TMDB_ACCOUNT_ID=dev_account
+uv run python app.py
+```
+
+Visit `http://localhost:5000` and you'll see 5 classic movies with pre-cached streaming data!
+
 ## Prerequisites
 
 1. A TMDb account with movies in your watchlist
@@ -82,6 +99,44 @@ export TMDB_ACCOUNT_ID=your_id
 # Run the app
 uv run python app.py
 ```
+
+### Using the Test Database
+
+For local development without TMDb API calls, a pre-populated SQLite database (`dev.db`) is included with test data containing 5 classic movies:
+
+```bash
+# Set environment to use the local dev database
+export DB_PATH=./dev.db
+export TMDB_ACCOUNT_ID=dev_account
+
+# Run the app (no TMDb API key needed for cached data)
+uv run python app.py
+```
+
+The test database includes:
+- **5 classic movies**:
+  - The Shawshank Redemption (1994)
+  - The Godfather (1972)
+  - The Godfather Part II (1974)
+  - Schindler's List (1993)
+  - 12 Angry Men (1957)
+- Pre-cached provider information for Netflix, Amazon Prime Video, and Paramount Plus
+- Pre-cached runtime data for all movies
+
+To reinitialize or reset the test database at any time:
+```bash
+uv run python init_dev_db.py
+```
+
+**Note**: To fetch fresh data or add more movies, you'll need to set your real TMDb credentials.
+
+## Database Configuration
+
+FlickStream uses SQLite to cache TMDb API responses. By default:
+- **Docker/Production**: Uses `/app/flickstream_cache.db` inside the container
+- **Local Development**: Set `DB_PATH` environment variable to use a different database
+
+The included `dev.db` is a pre-populated development database that doesn't require API calls.
 
 ## Configuration
 

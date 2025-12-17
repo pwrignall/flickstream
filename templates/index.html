@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlickStream</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <style>
         * {
             margin: 0;
@@ -229,6 +230,61 @@
             color: #94a3b8;
             font-size: 14px;
         }
+        
+        .streaming-box {
+            background: #1e293b;
+            padding: 0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .streaming-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            transition: background 0.2s;
+        }
+        
+        .streaming-header:hover {
+            background: #334155;
+        }
+        
+        .streaming-header label {
+            margin: 0;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .streaming-toggle {
+            color: #64748b;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .streaming-toggle.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .streaming-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .streaming-content.expanded {
+            max-height: fit-content;
+            transition: max-height 0.5s ease-in;
+        }       
+
+        .streaming-content-inner {
+            padding: 0 20px 20px 20px;
+        }
     </style>
 </head>
 <body>
@@ -241,14 +297,21 @@
             </div>
         </h1>
         
-        <div class="filters">
-            <div class="filter-group">
+        <div class="streaming-box">
+            <div class="streaming-header" onclick="toggleStreamingBox()">
                 <label>Streaming Services</label>
-                <div class="streaming-services" id="streaming-services">
-                    <!-- Will be populated dynamically -->
+                <span class="streaming-toggle" id="streaming-toggle">▼</span>
+            </div>
+            <div class="streaming-content" id="streaming-content">
+                <div class="streaming-content-inner">
+                    <div class="streaming-services" id="streaming-services">
+                        <!-- Will be populated dynamically -->
+                    </div>
                 </div>
             </div>
-            
+        </div>
+        
+        <div class="filters">
             <div class="filter-row">
                 <div class="filter-group">
                     <label>Search</label>
@@ -296,6 +359,20 @@
         let streamingServices = []; // Will be loaded from API
         let preferredServices = []; // Configured services from MY_STREAMING_SERVICES (from API)
         let isConfiguredServices = false; // Whether services are from config or auto-discovered
+        let preferredServicesInitialized = false; // Track if we've initialized preferred services
+        
+        function toggleStreamingBox() {
+            const content = document.getElementById('streaming-content');
+            const toggle = document.getElementById('streaming-toggle');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
         
         async function loadData() {
             try {
@@ -459,6 +536,20 @@
         function renderStreamingServices() {
             const container = document.getElementById('streaming-services');
             container.innerHTML = '';
+            
+            // Auto-select preferred services on first load if localStorage is empty
+            if (!preferredServicesInitialized && preferredServices.length > 0) {
+                const hasStoredServices = localStorage.getItem('selectedServices');
+                if (!hasStoredServices || selectedServices.size === 0) {
+                    // Auto-select all preferred services
+                    preferredServices.forEach(service => {
+                        selectedServices.add(service);
+                    });
+                    localStorage.setItem('selectedServices', JSON.stringify([...selectedServices]));
+                    console.log(`Auto-selected ${preferredServices.length} preferred services:`, preferredServices);
+                }
+                preferredServicesInitialized = true;
+            }
             
             // Sort services: preferred first, then alphabetically
             const sortedServices = [...streamingServices].sort((a, b) => {
