@@ -381,7 +381,6 @@ def api_watchlist():
             'release_date': movie.get('release_date', ''),
             'vote_average': movie.get('vote_average', 0),
             'genre_ids': movie.get('genre_ids', []),
-            'imdb_id': movie.get('imdb_id', ''),
             'genres': genre_names,
             'providers': {}  # Empty, will be loaded separately
         })
