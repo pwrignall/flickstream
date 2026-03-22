@@ -702,9 +702,10 @@
                 const runtime = movie.runtime ? `${movie.runtime} min` : 'N/A';
                 
                 return `
-                    <a href="https://www.imdb.com/title/${movie.imdb_id}" target="_blank">
-                        <div class="movie-card">
+                    <div class="movie-card">
+                        <a href="https://www.imdb.com/title/${movie.imdb_id}" target="_blank">
                             ${posterUrl ? `<img class="movie-poster" src="${posterUrl}" alt="${movie.title}">` : '<div class="movie-poster"></div>'}
+                            </a>
                             <div class="movie-info">
                                 <div class="movie-title">${movie.title}</div>
                                 <div class="movie-meta">
@@ -720,7 +721,6 @@
                                 ` : (!providersLoaded && loadingProviders ? '<div style="color: #64748b; font-size: 10px; margin-top: 5px;">⏳ Loading...</div>' : '')}
                             </div>
                         </div>
-                    </a>
                 `;
             }).join('');
         }
