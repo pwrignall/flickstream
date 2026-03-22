@@ -702,23 +702,25 @@
                 const runtime = movie.runtime ? `${movie.runtime} min` : 'N/A';
                 
                 return `
-                    <div class="movie-card">
-                        ${posterUrl ? `<img class="movie-poster" src="${posterUrl}" alt="${movie.title}">` : '<div class="movie-poster"></div>'}
-                        <div class="movie-info">
-                            <div class="movie-title">${movie.title}</div>
-                            <div class="movie-meta">
-                                ${year} ${movie.vote_average ? `<span class="rating">★ ${movie.vote_average.toFixed(1)}</span>` : ''} ${runtime}
-                            </div>
-                            <div class="movie-genres">
-                                ${movie.genres.slice(0, 2).map(g => `<span class="genre-badge">${g}</span>`).join('')}
-                            </div>
-                            ${providers.length > 0 ? `
-                                <div class="movie-providers">
-                                    ${providers.map(p => `<span class="provider-badge">${p}</span>`).join('')}
+                    <a href="https://www.imdb.com/title/${movie.imdb_id}" target="_blank">
+                        <div class="movie-card">
+                            ${posterUrl ? `<img class="movie-poster" src="${posterUrl}" alt="${movie.title}">` : '<div class="movie-poster"></div>'}
+                            <div class="movie-info">
+                                <div class="movie-title">${movie.title}</div>
+                                <div class="movie-meta">
+                                    ${year} ${movie.vote_average ? `<span class="rating">★ ${movie.vote_average.toFixed(1)}</span>` : ''} ${runtime}
                                 </div>
-                            ` : (!providersLoaded && loadingProviders ? '<div style="color: #64748b; font-size: 10px; margin-top: 5px;">⏳ Loading...</div>' : '')}
+                                <div class="movie-genres">
+                                    ${movie.genres.slice(0, 3).map(g => `<span class="genre-badge">${g}</span>`).join('')}
+                                </div>
+                                ${providers.length > 0 ? `
+                                    <div class="movie-providers">
+                                        ${providers.map(p => `<span class="provider-badge">${p}</span>`).join('')}
+                                    </div>
+                                ` : (!providersLoaded && loadingProviders ? '<div style="color: #64748b; font-size: 10px; margin-top: 5px;">⏳ Loading...</div>' : '')}
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
         }
