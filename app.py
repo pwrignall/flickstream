@@ -102,11 +102,11 @@ def make_tmdb_request(endpoint, params=None):
     if TMDB_AUTH_METHOD == 'bearer':
         # Use Bearer token in Authorization header
         headers = {'Authorization': f'Bearer {TMDB_API_KEY}'}
-        return requests.get(url, headers=headers, params=params)
+        return requests.get(url, headers=headers, params=params, timeout=10)
     else:
         # Use API key as query parameter (default)
         params['api_key'] = TMDB_API_KEY
-        return requests.get(url, params=params)
+        return requests.get(url, params=params, timeout=10)
 
 @lru_cache(maxsize=1)
 def get_all_genres():
@@ -137,13 +137,33 @@ def get_cached_watchlist(account_id):
         cached_data, cached_at = row
         cached_time = datetime.fromisoformat(cached_at)
         expiry_time = cached_time + timedelta(hours=WATCHLIST_CACHE_HOURS)
-        
+
         if datetime.now() < expiry_time:
             print(f"✓ Using cached watchlist (cached {cached_time.strftime('%Y-%m-%d %H:%M:%S')})")
             return json.loads(cached_data)
         else:
             print(f"✗ Cached watchlist expired (was from {cached_time.strftime('%Y-%m-%d %H:%M:%S')})")
-    
+
+    return None
+
+def get_cached_watchlist_any(account_id):
+    """Get the most recent cached watchlist regardless of expiry, with its cache time"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute('''
+        SELECT data, cached_at FROM watchlist_cache
+        WHERE account_id = ?
+        ORDER BY cached_at DESC LIMIT 1
+    ''', (account_id,))
+
+    row = c.fetchone()
+    conn.close()
+
+    if row:
+        cached_data, cached_at = row
+        return json.loads(cached_data), datetime.fromisoformat(cached_at)
+
     return None
 
 def cache_watchlist(account_id, movies):
@@ -222,45 +242,82 @@ def cache_providers(providers_data):
     conn.close()
     print(f"✓ Cached provider data for {len(providers_data)} movies")
 
+def fetch_watchlist_page(account_id, page):
+    """Fetch a single page of the watchlist from TMDb"""
+    response = make_tmdb_request(
+        f'/account/{account_id}/watchlist/movies',
+        params={'page': page, 'sort_by': 'created_at.desc'}
+    )
+    print(f"Watchlist API response status (page {page}): {response.status_code}")
+    response.raise_for_status()
+    return response.json()
+
+def fetch_full_watchlist(account_id):
+    """Fetch the entire watchlist from TMDb, paginating in parallel"""
+    print(f"Fetching watchlist from API for account: {account_id}")
+
+    first_page = fetch_watchlist_page(account_id, 1)
+    pages = {1: first_page['results']}
+    total_pages = first_page['total_pages']
+    print(f"Page 1: Found {len(first_page['results'])} movies (total pages: {total_pages})")
+
+    if total_pages > 1:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_page = {
+                executor.submit(fetch_watchlist_page, account_id, page): page
+                for page in range(2, total_pages + 1)
+            }
+            for future in as_completed(future_to_page):
+                page = future_to_page[future]
+                data = future.result()
+                print(f"Page {page}: Found {len(data['results'])} movies")
+                pages[page] = data['results']
+
+    movies = [movie for page in range(1, total_pages + 1) for movie in pages[page]]
+    print(f"Total movies fetched: {len(movies)}")
+    return movies
+
 def get_watchlist():
     """Fetch watchlist from TMDb (with caching)"""
-    # Try cache first
+    # Fully fresh cache - serve directly with no API calls
     cached = get_cached_watchlist(TMDB_ACCOUNT_ID)
     if cached is not None:
         return cached
-    
-    # Cache miss - fetch from API
-    try:
-        movies = []
-        page = 1
-        
-        print(f"Fetching watchlist from API for account: {TMDB_ACCOUNT_ID}")
-        
-        while True:
-            response = make_tmdb_request(
-                f'/account/{TMDB_ACCOUNT_ID}/watchlist/movies',
-                params={'page': page, 'sort_by': 'created_at.desc'}
+
+    stale = get_cached_watchlist_any(TMDB_ACCOUNT_ID)
+
+    if stale is not None:
+        stale_movies, cached_time = stale
+
+        # Cheap revalidation: check just page 1 to see if anything actually
+        # changed before paying for a full paginated re-fetch
+        try:
+            page1 = fetch_watchlist_page(TMDB_ACCOUNT_ID, 1)
+            unchanged = (
+                page1['total_results'] == len(stale_movies)
+                and [m['id'] for m in page1['results']]
+                    == [m['id'] for m in stale_movies[:len(page1['results'])]]
             )
-            print(f"Watchlist API response status: {response.status_code}")
-            response.raise_for_status()
-            data = response.json()
-            print(f"Page {page}: Found {len(data['results'])} movies")
-            movies.extend(data['results'])
-            
-            if page >= data['total_pages']:
-                break
-            page += 1
-        
-        print(f"Total movies fetched: {len(movies)}")
-        
-        # Cache the results
+        except Exception as e:
+            print(f"Watchlist revalidation check failed, serving stale cache: {e}")
+            return stale_movies
+
+        if unchanged:
+            print(f"✓ Watchlist unchanged since {cached_time.strftime('%Y-%m-%d %H:%M:%S')}, skipping full re-fetch")
+            cache_watchlist(TMDB_ACCOUNT_ID, stale_movies)  # touch cached_at
+            return stale_movies
+
+        print("Watchlist changed since last cache, doing full re-fetch")
+
+    # No usable cache, or revalidation detected a change - do the full fetch
+    try:
+        movies = fetch_full_watchlist(TMDB_ACCOUNT_ID)
         cache_watchlist(TMDB_ACCOUNT_ID, movies)
-        
         return movies
     except Exception as e:
         print(f"Error fetching watchlist: {e}")
         print(traceback.format_exc())
-        return []
+        return stale[0] if stale is not None else []
 
 def get_watch_providers(movie_id):
     """Fetch streaming providers for a movie (with caching)"""
